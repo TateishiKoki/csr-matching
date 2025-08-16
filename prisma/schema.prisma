@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  region      String?
+  deadline    DateTime?
+  status      ProjectStatus @default(DRAFT)
+  images      Image[]
+  proposals   Proposal[]
+  createdAt   DateTime @default(now())
+}
+
+model Image {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  url       String
+  order     Int
+  isCover   Boolean @default(false)
+}
+
+model Proposal {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  companyName String
+  message     String?
+  amountOffer Int?
+  status      ProposalStatus @default(SENT)
+  createdAt   DateTime @default(now())
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum ProposalStatus {
+  SENT
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+}
