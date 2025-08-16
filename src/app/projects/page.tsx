@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma, isSQLiteOnVercel } from "@/lib/db";
-import { demoProjects } from "@/lib/demo-data";
 
 // ビルドでDBに触れないよう安全側
 export const dynamic = "force-dynamic";
@@ -14,14 +13,30 @@ type ProjectWithImages = {
   images: { id: string; url: string; order: number; isCover: boolean }[];
 };
 
+// ここを追加（ダミーデータを直書き）
+const demoProjects: ProjectWithImages[] = [
+  {
+    id: "demo-1",
+    title: "海岸清掃プロジェクト（デモ）",
+    description: "地域企業と連携して海岸の清掃を行います。",
+    region: "神奈川",
+    images: [{ id: "i1", url: "/next.svg", order: 0, isCover: true }],
+  },
+  {
+    id: "demo-2",
+    title: "子ども食堂スポンサー募集（デモ）",
+    description: "月1回の開催支援。ロゴ掲出・レポート提供あり。",
+    region: "東京",
+    images: [{ id: "i2", url: "/vercel.svg", order: 0, isCover: true }],
+  },
+];
+
 export default async function ProjectsPage() {
   let projects: ProjectWithImages[] = [];
 
   if (isSQLiteOnVercel) {
-    // Vercel本番（SQLite）ではダミーデータ
-    projects = demoProjects as unknown as ProjectWithImages[];
+    projects = demoProjects; // ← 本番はダミー
   } else {
-    // ローカル/外部DBでは実データ
     projects = await prisma.project.findMany({
       include: { images: true },
       orderBy: { createdAt: "desc" },
@@ -32,7 +47,7 @@ export default async function ProjectsPage() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">プロジェクト一覧</h1>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((p: ProjectWithImages) => {
+        {projects.map((p) => {
           const cover = p.images.find((i) => i.isCover) ?? p.images[0];
           return (
             <Link
